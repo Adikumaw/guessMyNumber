@@ -1,108 +1,68 @@
-"use strict";
-const startGame = document.getElementsByClassName("start");
-const resetGame = document.getElementsByClassName("again");
-const checkButton = document.getElementsByClassName("check");
-const message = document.getElementsByClassName("message");
-const defaultChances = document.getElementsByClassName("score");
-const highScore = document.getElementsByClassName("highscore");
-const defaultChancesStringToNumber = Number(defaultChances[0].innerHTML);
-const guess = document.getElementsByClassName("guess");
-let randomNumber = 0; // Storing random numbers
-let buttonClickCounter = 0; // Storing number of times a button is clicked
-let currentScore; // Storing Current Score
-// let previousHighScore = 0; // For Storing Previous Round HighScore
+("use strict");
 
-// Uitlity Functions
+import Game from "./Game.js";
 
-// Function for generating random number
-const randomNumberGenerator = () => {
-  randomNumber = Math.floor(Math.random() * 20) + 1;
-  return randomNumber;
+const start = document.getElementsByClassName("start")[0]; // start button
+const again = document.getElementsByClassName("again")[0]; // again button
+const checkButton = document.getElementsByClassName("check")[0]; // checkButton
+let message = document.getElementsByClassName("message")[0]; // message component
+let chances = document.getElementsByClassName("chances")[0]; // chances component
+let score = document.getElementsByClassName("score")[0]; // score component
+let highScore = document.getElementsByClassName("highscore")[0]; // highScore component
+let guess = document.getElementsByClassName("guess")[0]; // user input
+
+let game = new Game();
+
+// updates current score, chances and highScore status
+let updateValues = () => {
+  chances.innerHTML = game.getChances();
+  score.innerHTML = game.getScore();
+  highScore.innerHTML = game.getHighScore();
 };
 
-// Function for changing the Score value
-const changeScore = () => {
-  defaultChances[0].innerHTML = String(Number(defaultChances[0].innerHTML) - 1);
-  currentScore = Number(defaultChances[0].innerHTML);
-  return currentScore;
-};
-
-// Sets the defaultChances back to 20 whenever it is invoked
-const defaultScoreSetter = (counter) => {
-  for (let i = 0; i < counter; i++) {
-    defaultChances[0].innerHTML = 20;
-  }
-};
-
-// Function for stopping user from inputting negative integers
-userInput.addEventListener("input", () => {
-  const inputValue = userInput.value;
-  if (inputValue < 0) {
-    alert("Please enter a number between 1 to 20 !");
-    userInput.value = "";
-  } else if (inputValue > 20) {
-    alert("Please enter a number between 1 to 20 !");
-    userInput.value = "";
-  }
-});
-
-// Stores the Highscore
-const storeHighScore = (HighScore) => {
-  buttonClickCounter++;
-  highScore[0].innerHTML = Number(HighScore);
-  defaultScoreSetter(buttonClickCounter);
-};
-
-// Resets everything (input field to blank, Score to 20, Highscore to 0) to it's default values
-const gameResetter = (scoreDefault, highScoreDefault) => {
-  guess[0].value = "";
-  defaultChances[0].innerHTML = scoreDefault;
-  highScore[0].innerHTML = highScoreDefault;
-};
-
-// Game Logic Functions
-// Logic for Again Button i.e., (resetting the game back to default)
-startGame[0].addEventListener("click", () => {
+// event listner to start button
+start.addEventListener("click", () => {
+  // make game body visible
   const gameBody = document.getElementsByTagName("main")[0];
   gameBody.classList.add("visible");
   gameBody.classList.remove("hidden");
-  randomNumberGenerator();
-  gameResetter(20, 0);
-  console.log(randomNumber);
-  checkButton[0].disabled = false;
+  message.innerHTML = "Start guessing..."; // show start guessing message
+  userInput.value = ""; // empty input area
+  game.reset(); // reset game
+  updateValues(); // update new values
 });
 
-// Logic for Again Button i.e., (resetting the game back to default except for highscore)
-resetGame[0].addEventListener("click", () => {
-  storeHighScore(highScore[0].innerHTML);
-  randomNumberGenerator();
-  gameResetter(20, highScore[0].innerHTML);
-  defaultChances[0].innerHTML = 20;
-  console.log(randomNumber);
-  checkButton[0].disabled = false;
+// event listner to again button
+again.addEventListener("click", () => {
+  // make play again! button to check! button
+  if (checkButton.innerHTML == "Play Again!") checkButton.innerHTML = "Check!";
+  message.innerHTML = "guess again..."; // show guess again message
+  userInput.value = ""; // empty input area
+  game.again(); // call again() method
+  updateValues(); // update new values
 });
 
-// Logic for Checking user input number & computer generated number
-checkButton[0].addEventListener("click", () => {
-  buttonClickCounter++;
-  const guessNumber = Number(guess[0].value);
-  if (guessNumber === randomNumber) {
-    message[0].innerHTML = "You Win";
-    highScore[0].innerHTML =
-      Number(highScore[0].innerHTML) + changeScore(buttonClickCounter);
-    checkButton[0].disabled = true;
-    return highScore[0].innerHTML;
-  } else {
-    if (guessNumber < randomNumber) {
-      message[0].innerHTML = "Too Low";
-      changeScore(buttonClickCounter);
-    } else if (guessNumber > randomNumber) {
-      message[0].innerHTML = "Too High";
-      changeScore(buttonClickCounter);
-    }
+// event listner to checkbutton
+checkButton.addEventListener("click", () => {
+  // trigger click on again button if checkButton is play again!
+  if (checkButton.innerHTML == "Play Again!") {
+    const event = new Event("click");
+    again.dispatchEvent(event);
+    return;
   }
-  if (defaultChances[0].innerHTML === "0") {
-    message[0].innerHTML = "You Lose";
-    checkButton[0].disabled = true;
+  // check the input value..
+  message.innerHTML = game.check(guess.value);
+  updateValues(); // update new values
+  // make check button to play again if wins or loose
+  if (message.innerHTML == "you win..." || message.innerHTML == "you lose...")
+    checkButton.innerHTML = "Play Again!";
+});
+
+// incorrect value checker (checks if the user input gets out of bounds) and promt to re-enter the value
+userInput.addEventListener("input", () => {
+  const inputValue = userInput.value;
+  if (inputValue < 0 || inputValue > 20) {
+    alert("Please enter a number between 1 to 20 !");
+    userInput.value = "";
   }
 });
